@@ -1,0 +1,9 @@
+.idea/
+.env
+venv/
+
+/ticket_numbers
+/photo
+
+__pycache__/
+src/__pycache__/
