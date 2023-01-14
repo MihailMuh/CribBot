@@ -4,6 +4,7 @@ venv/
 
 /ticket_numbers
 /photo
+/temp
 
 __pycache__/
 

@@ -1,12 +1,11 @@
 from aiogram import types
 from aiogram.types import InputMediaPhoto, InputFile
 
-from .quick_checks import get_term_subject
-from ..core import dispatcher
-from ..core import telegram_bot
-from ..crib_data import crib_data
-from ..models.ticket import Ticket
-from ..string_utils import get_pretty_photo_name
+from src.controllers.validator import is_term_subject_valid
+from src.core.core import dispatcher
+from src.crib_data import crib_data
+from src.models.ticket import Ticket
+from src.string_utils import get_pretty_photo_name
 
 
 def get_photos(ticket: Ticket) -> list:
@@ -21,16 +20,16 @@ def get_media(ticket: Ticket) -> list:
     if not photos:
         return []
 
-    media_group: list = [InputMediaPhoto(media=photos[0], caption=get_pretty_photo_name(ticket))]
+    media: list = [InputMediaPhoto(media=photos[0], caption=get_pretty_photo_name(ticket))]
     for i in range(1, len(photos)):
-        media_group.append(InputMediaPhoto(media=photos[i]))
+        media.append(InputMediaPhoto(media=photos[i]))
 
-    return media_group
+    return media
 
 
 @dispatcher.message_handler(regexp=r'^([\s\d]+)$')  # only numbers
 async def send_photo_to_user(message: types.Message):
-    ticket: Ticket = Ticket(int(message.text), *(await get_term_subject(message)))
+    ticket: Ticket = Ticket(int(message.text), *(await is_term_subject_valid(message)))
     if not ticket.term:  # if no term or subject selected, get_term_subject already answered for user
         return
 
@@ -41,4 +40,4 @@ async def send_photo_to_user(message: types.Message):
     if not media:
         return await message.answer("Решения на этот вопрос еще не появилось(")
 
-    await telegram_bot.send_media_group(chat_id=message.from_user.id, media=media)
+    await message.answer_media_group(media=media)

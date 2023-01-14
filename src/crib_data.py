@@ -3,7 +3,7 @@ from pathlib import Path
 
 from orjson import loads
 
-from .constants import BASE_DIR
+from src.constants import BASE_DIR
 
 
 def extract_photos_to_dict(path_to_dir: Path, tickets: list) -> dict:
@@ -42,18 +42,22 @@ def extract_photos_to_dict(path_to_dir: Path, tickets: list) -> dict:
 
 with open(BASE_DIR / "photo" / "translate.json", "rb") as binary_file:
     translate: dict = loads(binary_file.read())
-crib_data: dict = dict()
+walking: list = list(os.walk(BASE_DIR / "photo"))
+crib_data: dict = {_dir: dict() for _dir in walking.pop(0)[1]}
+
+# init dirs
+for path, dirs, photos in filter(lambda _tuple: _tuple[1], walking):
+    split: list = path.split("/")  # ["home", "user", "Desktop", "CribBot", "photo", "term_1", "matanalysis"]
+    crib_data[split[-1]] = {_dir: dict() for _dir in dirs}
 
 # filter elements where photo exists
-for path, dirs, photos in filter(lambda _tuple: _tuple[2], list(os.walk(BASE_DIR / "photo"))[1:]):
+for path, dirs, photos in filter(lambda _tuple: _tuple[0].split("/")[-1] in translate.keys(), walking):
     split: list = path.split("/")  # ["home", "user", "Desktop", "CribBot", "photo", "term_1", "matanalysis"]
     term: str = split[-2]
     subject: str = split[-1]
 
     with open(BASE_DIR / "ticket_numbers" / term / f"{subject}.txt", encoding="utf-8") as file:
-        crib_data[term] = {
-            subject: {
-                "photos": extract_photos_to_dict(Path(path), photos),
-                "ticket_numbers": "".join(file.readlines()),
-            }
+        crib_data[term][subject] = {
+            "photos": extract_photos_to_dict(Path(path), photos),
+            "ticket_numbers": "".join(file.readlines()),
         }

@@ -1,8 +1,8 @@
 from functools import lru_cache
 
-from .controllers.photo_download_controller import Ticket
-from .crib_data import translate
-from .user_cache import cache
+from src.controllers.photo_controllers.photo_download_controller import Ticket
+from src.crib_data import translate
+from src.cache.user_cache import cache
 
 
 def get_pretty_photo_name(ticket: Ticket) -> str:

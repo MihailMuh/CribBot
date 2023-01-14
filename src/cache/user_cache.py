@@ -1,6 +1,6 @@
 from typing import Any
 
-from src.core import redis_db
+from src.core.core import redis_db
 
 
 class _Cache:
