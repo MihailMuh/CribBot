@@ -1,25 +1,22 @@
-import redis.asyncio as redis
 from aiogram import executor, types, Dispatcher
 
-from src.constants import REDIS_SOCKET, REDIS_DB
-from src.core import dispatcher
-from src.user import set_term, set_subject, get_term, get_subject, cache
-
-redis_db: redis.Redis
+from src.core import dispatcher, redis_db
 
 
-async def redis_startup():
-    global redis_db
-    redis_db = redis.Redis(unix_socket_path=REDIS_SOCKET, db=REDIS_DB, decode_responses=True)
+async def init_redis():
+    redis_cache: dict = {int(key): await redis_db.hgetall(key) for key in await redis_db.keys()}
 
-    set_term(await redis_db.get("term"))
-    set_subject(await redis_db.get("subject"))
+    if redis_cache:
+        from src.user_cache import cache
 
-    print(get_term(), get_subject())
+        cache.set_primary_cache(redis_cache)
+        print("Cache is being restored!")
+    else:
+        print("Cache isn't being restored!")
 
 
 async def startup(dp: Dispatcher):
-    await redis_startup()
+    await init_redis()
     await dp.bot.set_my_commands([
         types.BotCommand("start", "Запустить приветственный диалог"),
         types.BotCommand("subject", "Установить предмет для экзамена"),
@@ -28,12 +25,5 @@ async def startup(dp: Dispatcher):
     ])
 
 
-async def shutdown(dp: Dispatcher):
-    await redis_db.mset(cache)
-
-    await redis_db.save()
-    await redis_db.close()
-
-
 if __name__ == '__main__':
-    executor.start_polling(dispatcher, skip_updates=True, on_startup=startup, on_shutdown=shutdown)
+    executor.start_polling(dispatcher, skip_updates=True, on_startup=startup)

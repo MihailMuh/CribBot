@@ -1,43 +1,43 @@
 from aiogram import types
 from aiogram.types import InputMediaPhoto, InputFile
 
+from .quick_checks import get_term_subject
 from ..core import dispatcher
 from ..core import telegram_bot
-from ..crib_data import get_min_number_of_tickets, get_max_number_of_tickets, crib_data
+from ..crib_data import crib_data
+from ..models.ticket import Ticket
 from ..string_utils import get_pretty_photo_name
-from ..user import get_term, get_subject
 
 
-def get_photos_by_number(number: int) -> list:
-    return [InputFile(photo) for photo in crib_data[get_term()][get_subject()]["photos"][number]]
+def get_photos(ticket: Ticket) -> list:
+    photos: list = crib_data[ticket.term][ticket.subject]["photos"].get(ticket.number)
+
+    return [InputFile(photo) for photo in photos] if photos else []
 
 
-def get_media_by_number(number: int) -> list:
-    photos: list = get_photos_by_number(number)
+def get_media(ticket: Ticket) -> list:
+    photos: list = get_photos(ticket)
 
     if not photos:
         return []
 
-    media_group: list = [InputMediaPhoto(media=photos[0], caption=get_pretty_photo_name(number))]
+    media_group: list = [InputMediaPhoto(media=photos[0], caption=get_pretty_photo_name(ticket))]
     for i in range(1, len(photos)):
         media_group.append(InputMediaPhoto(media=photos[i]))
 
     return media_group
 
 
-@dispatcher.message_handler(regexp=r'^([\s\d]+)$')
+@dispatcher.message_handler(regexp=r'^([\s\d]+)$')  # only numbers
 async def send_photo_to_user(message: types.Message):
-    if not get_term():
-        return await message.answer("Семестр не выбран!")
-    if not get_subject():
-        return await message.answer("Предмет не выбран!")
+    ticket: Ticket = Ticket(int(message.text), *(await get_term_subject(message)))
+    if not ticket.term:  # if no term or subject selected, get_term_subject already answered for user
+        return
 
-    ticket_number = int(message.text)
-
-    if not (get_min_number_of_tickets() <= ticket_number <= get_max_number_of_tickets()):
+    if not ticket.is_number_valid():
         return await message.answer("Нет такого номера вопроса!")
 
-    media: list = get_media_by_number(ticket_number)
+    media: list = get_media(ticket)
     if not media:
         return await message.answer("Решения на этот вопрос еще не появилось(")
 

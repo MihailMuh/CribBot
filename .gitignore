@@ -6,3 +6,5 @@ venv/
 /photo
 
 __pycache__/
+
+/docker

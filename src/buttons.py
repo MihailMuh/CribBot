@@ -4,9 +4,9 @@ from .crib_data import crib_data, translate
 from .string_utils import get_term_translate
 
 
-def get_subjects_from_term(subjects: dict) -> InlineKeyboardMarkup:
+def get_subjects_from_term(_subjects: dict) -> InlineKeyboardMarkup:
     subj_buttons: InlineKeyboardMarkup = InlineKeyboardMarkup(row_width=1)
-    for subject in subjects.keys():
+    for subject in _subjects.keys():
         subj_buttons.add(InlineKeyboardButton(text=translate[subject], callback_data=subject))
     return subj_buttons
 

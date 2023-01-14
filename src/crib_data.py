@@ -4,15 +4,6 @@ from pathlib import Path
 from orjson import loads
 
 from .constants import BASE_DIR
-from .user import get_term, get_subject
-
-
-def get_min_number_of_tickets() -> int:
-    return min(crib_data[get_term()][get_subject()]["photos"].keys())
-
-
-def get_max_number_of_tickets() -> int:
-    return max(crib_data[get_term()][get_subject()]["photos"].keys())
 
 
 def extract_photos_to_dict(path_to_dir: Path, tickets: list) -> dict:

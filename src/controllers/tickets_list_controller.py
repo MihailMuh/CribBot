@@ -1,15 +1,14 @@
 from aiogram import types
 
+from .quick_checks import get_term_subject
 from ..core import dispatcher
 from ..crib_data import crib_data
-from ..user import get_term, get_subject
 
 
 @dispatcher.message_handler(commands=['tickets'])
 async def get_tickets_list(message: types.Message):
-    if not get_term():
-        return await message.answer("Семестр не выбран!")
-    if not get_subject():
-        return await message.answer("Предмет не выбран!")
+    term, subject = get_term_subject(message)
+    if not term:  # if no term or subject selected, get_term_subject already answered for user
+        return
 
-    await message.answer(crib_data[get_term()][get_subject()]["ticket_numbers"])
+    await message.answer(crib_data[term][subject]["ticket_numbers"])
