@@ -1,4 +1,5 @@
 import os
+import re
 from pathlib import Path
 
 from orjson import loads
@@ -8,19 +9,24 @@ from src.constants import BASE_DIR
 
 def extract_photos_to_dict(path_to_dir: Path, tickets: list) -> dict:
     tickets.sort()
+
     tickets_dict: dict = dict()
     i: int = 0
 
     while i < len(tickets):
-        current_ticket: str = tickets[i]
+        current_ticket: str = tickets[i][:tickets[i].index("_")]
 
         for j in range(i + 1, len(tickets)):
             next_ticket: str = tickets[j]
 
-            if current_ticket[:current_ticket.index("_")] != next_ticket[:next_ticket.index("_")]:
-                tickets_dict[int(current_ticket[:current_ticket.index("_")])] = [path_to_dir / t for t in tickets[i:j]]
+            if current_ticket != next_ticket[:next_ticket.index("_")]:
+                tickets_dict[int(current_ticket)] = [path_to_dir / t for t in tickets[i:j]]
                 i = j - 1
+
                 break
+        else:
+            tickets_dict[int(current_ticket)] = [path_to_dir / t for t in tickets[i:]]
+            break
 
         i += 1
 
@@ -57,7 +63,18 @@ for path, dirs, photos in filter(lambda _tuple: _tuple[0].split("/")[-1] in tran
     subject: str = split[-1]
 
     with open(BASE_DIR / "ticket_numbers" / term / f"{subject}.txt", encoding="utf-8") as file:
+        photos_dict: dict = extract_photos_to_dict(Path(path), photos)
+        ticket_numbers: str = "".join(file.readlines())
+
+        # it finds 1. 2. 34. etc, so we remove point
+        all_tickets: list = list(map(lambda x: int(x.replace(".", "")), re.findall(r'\d+\.', ticket_numbers)))
+
+        if min(all_tickets) not in photos_dict.keys():
+            photos_dict[min(all_tickets)] = []
+        if max(all_tickets) not in photos_dict.keys():
+            photos_dict[max(all_tickets)] = []
+
         crib_data[term][subject] = {
-            "photos": extract_photos_to_dict(Path(path), photos),
-            "ticket_numbers": "".join(file.readlines()),
+            "photos": photos_dict,
+            "ticket_numbers": ticket_numbers,
         }

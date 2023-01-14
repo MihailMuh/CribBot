@@ -12,4 +12,6 @@ class Ticket:
 
     def is_number_valid(self) -> bool:
         all_tickets: dict = crib_data[self.term][self.subject]["photos"].keys()
-        return min(all_tickets) <= self.number <= max(all_tickets)
+
+        if all_tickets:
+            return min(all_tickets) <= self.number <= max(all_tickets)
