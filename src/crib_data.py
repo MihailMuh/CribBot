@@ -33,18 +33,20 @@ def extract_photos_to_dict(path_to_dir: Path, tickets: list) -> dict:
     return tickets_dict
 
 
-# structure of crib_data:
-# {
-#     "term_1": {
-#         "matanalysis": {
-#             "photos": {
-#                 45: [Path("45_1.jpg"), Path("45_2.jpg")],
-#                 46: [Path("46_1.jpg")]
-#             },
-#             "ticket_numbers": "12 - сложение функций\n....."
-#         }
-#     },
-# }
+'''
+structure of crib_data:
+{
+    "term_1": {
+        "matanalysis": {
+            "photos": {
+                45: [Path("45_1.jpg"), Path("45_2.jpg")],
+                46: [Path("46_1.jpg")]
+            },
+            "ticket_numbers": "12 - сложение функций\n....."
+        }
+    },
+}
+'''
 
 with open(BASE_DIR / "photo" / "translate.json", "rb") as binary_file:
     translate: dict = loads(binary_file.read())
@@ -64,10 +66,20 @@ for path, dirs, photos in filter(lambda _tuple: _tuple[0].split("/")[-1] in tran
 
     with open(BASE_DIR / "ticket_numbers" / term / f"{subject}.txt", encoding="utf-8") as file:
         photos_dict: dict = extract_photos_to_dict(Path(path), photos)
-        ticket_numbers: str = "".join(file.readlines())
+        input_data: list = file.readlines()
 
         # it finds 1. 2. 34. etc, so we remove point
-        all_tickets: list = list(map(lambda x: int(x.replace(".", "")), re.findall(r'\d+\.', ticket_numbers)))
+        all_tickets: list = list(map(lambda x: int(x.replace(".", "")), re.findall(r'\d+\.', "".join(input_data))))
+        ticket_numbers: str = ""
+
+        for i, line in enumerate(input_data):
+            numbers: list = re.findall(r'\d+\.', line)
+
+            if (not numbers) or (int(numbers[0].replace(".", "")) not in photos_dict.keys()):
+                ticket_numbers += line
+                continue
+
+            ticket_numbers += f"🫡 {line}"
 
         if min(all_tickets) not in photos_dict.keys():
             photos_dict[min(all_tickets)] = []

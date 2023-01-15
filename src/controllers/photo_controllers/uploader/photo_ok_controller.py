@@ -21,8 +21,9 @@ async def photo_ok(call: types.CallbackQuery, state: FSMContext):
     new_photos: list = list(map(lambda photo: dest_photo_path / Path(photo).name, data["photos"]))
 
     # delete old photos
-    for photo in crib_data[data["term"]][data["subject"]]["photos"][data["number"]]:
-        photo.unlink()
+    if old_photos := crib_data[data["term"]][data["subject"]]["photos"].get(data["number"]):
+        for photo in old_photos:
+            photo.unlink()
 
     # set ... 46: [Path("/home/user/.../45_1.jpg"), ] ...  in crib_data
     crib_data[data["term"]][data["subject"]]["photos"][data["number"]] = new_photos

@@ -15,5 +15,6 @@ from src.controllers.photo_controllers.uploader.photo_uploader_controller import
     check_key, ticket_number, upload_photo, finish, rate_waiting
 
 from src.controllers.greeting_controller import greeting_message
+from src.controllers.support_controller import support
 
 from src.controllers.any_text_controller import any_text_handler  # most not commonly

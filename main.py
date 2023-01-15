@@ -23,6 +23,7 @@ async def startup(dp: Dispatcher):
         types.BotCommand("term", "Задать семестр экзамена"),
         types.BotCommand("tickets", "Получить список вопросов"),
         types.BotCommand("upload", "Загрузить решения на вопрос"),
+        types.BotCommand("support", "Поддержать автора :)"),
     ])
 
 

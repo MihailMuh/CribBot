@@ -8,10 +8,10 @@ from src.crib_data import crib_data
 async def send_long_message(message: types.Message, data: str):
     if len(data) > 4096:
         for x in range(0, len(data), 4096):
-            await message.answer(data[x:x + 4096])
+            await message.answer(data[x:x + 4096], parse_mode="HTML")
         return
 
-    await message.answer(data)
+    await message.answer(data, parse_mode="HTML")
 
 
 @dispatcher.message_handler(commands=['tickets'])
@@ -20,4 +20,5 @@ async def get_tickets_list(message: types.Message):
     if (not term) and (not subject):  # if no term or subject selected, get_term_subject already answered for user
         return
 
-    await send_long_message(message, crib_data[term][subject]["ticket_numbers"])
+    await send_long_message(message, f"{crib_data[term][subject]['ticket_numbers']}\n"
+                                     "Смайлик перед теми задачами, на которые есть решения")
