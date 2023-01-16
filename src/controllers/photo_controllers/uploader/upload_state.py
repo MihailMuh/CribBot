@@ -6,3 +6,4 @@ class UploadStates(StatesGroup):
     ticket_number: State = State()
     upload_photo: State = State()
     rate_photos: State = State()
+    add_ticket_name: State = State()

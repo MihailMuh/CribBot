@@ -9,9 +9,9 @@ from src.string_utils import get_pretty_photo_name
 
 
 def get_photos(ticket: Ticket) -> list:
-    photos: list = crib_data[ticket.term][ticket.subject]["photos"].get(ticket.number)
+    ticket_number: dict = crib_data[ticket.term][ticket.subject]["tickets"].get(ticket.number)
 
-    return [InputFile(photo) for photo in photos] if photos else []
+    return [InputFile(photo) for photo in ticket_number["photos"]] if ticket_number else []
 
 
 def get_media(ticket: Ticket) -> list:

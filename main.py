@@ -27,5 +27,10 @@ async def startup(dp: Dispatcher):
     ])
 
 
+async def shutdown(dp: Dispatcher):
+    await dp.storage.close()
+    await redis_db.close()
+
+
 if __name__ == '__main__':
     executor.start_polling(dispatcher, skip_updates=False, on_startup=startup)

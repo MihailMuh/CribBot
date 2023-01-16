@@ -39,20 +39,7 @@ async def check_key(message: types.Message):
     await UploadStates.next()
 
 
-@dispatcher.message_handler(state=UploadStates.ticket_number)
-async def ticket_number(message: types.Message, state: FSMContext):
-    try:
-        user_id: int = message.from_user.id
-        term: str = cache.get_term(user_id)
-        subject: str = cache.get_subject(user_id)
-        ticket: Ticket = Ticket(int(message.text), term, subject)
-    except ValueError:
-        await message.answer("🤦")
-        return await message.answer("Это не число... Пробуй еще раз")
-
-    if not ticket.is_number_valid():
-        return await message.answer("Нет такого номера вопроса!")
-
+async def ask_send_photo(message: types.Message):
     await message.answer("Теперь отправляй сюда фотографии (не более 10! остальные - скипнутся).\n"
                          "Можно все одним сообщением, можно - по отдельности\n"
                          "Они будут сохранятся в том порядке, в каком ты отправишь\n"
@@ -60,8 +47,42 @@ async def ticket_number(message: types.Message, state: FSMContext):
                          parse_mode=ParseMode.MARKDOWN,
                          reply_markup=InlineKeyboardMarkup(row_width=1).add(button_cancel))
 
+    await UploadStates.upload_photo.set()
+
+
+@dispatcher.message_handler(state=UploadStates.ticket_number)
+async def ticket_number(message: types.Message, state: FSMContext):
+    try:
+        user_id: int = message.from_user.id
+        term: str = cache.get_term(user_id)
+        subject: str = cache.get_subject(user_id)
+        ticket: Ticket = Ticket(int(message.text), term, subject)
+
+        if int(message.text) <= 0:
+            raise ValueError
+    except ValueError:
+        await message.answer("🤦")
+        return await message.answer("Это не номер... Пробуй еще раз")
+
     await state.update_data(ticket.__dict__, photos=[], id=str(message.from_user.id))
-    await UploadStates.next()
+
+    if not ticket.is_number_valid():
+        await UploadStates.add_ticket_name.set()
+        return await message.answer("Такого номера вопроса нет, значит, будет добавляться новый пункт\n"
+                                    "Напиши название нового вопроса и после этого введи `КОНЕЦ`\n"
+                                    "Если ты отправишь несколько сообщений, возьмется только последнее!",
+                                    parse_mode=ParseMode.MARKDOWN,
+                                    reply_markup=InlineKeyboardMarkup(row_width=1).add(button_cancel))
+
+    await ask_send_photo(message)
+
+
+@dispatcher.message_handler(state=UploadStates.add_ticket_name)
+async def add_ticket_name(message: types.Message, state: FSMContext):
+    if message.text == "КОНЕЦ":
+        return await ask_send_photo(message)
+
+    await state.update_data(new_ticket_name=message.text.replace("\n", ". "))
 
 
 def get_photo(data: dict, photo_suffix: int) -> Path:
@@ -87,7 +108,7 @@ async def upload_photo(msg: types.Message, state: FSMContext, messages: List[typ
 @dispatcher.message_handler(state=UploadStates.upload_photo)
 async def finish(message: types.Message, state: FSMContext):
     if message.text != "КОНЕЦ":
-        return await message.answer("...")
+        return await rate_waiting(message)
 
     data: dict = await state.get_data()
     photos: list = list(map(Path, data["photos"]))
@@ -100,6 +121,9 @@ async def finish(message: types.Message, state: FSMContext):
     media: list = [InputMediaPhoto(media=InputFile(photos.pop(0)), caption=get_pretty_photo_name(ticket))] + \
                   [InputMediaPhoto(media=InputFile(photo)) for photo in photos]
 
+    if len(media) > 10:
+        media = media[:10]
+
     await message.answer_media_group(media=media)
     await message.answer("Твои фото будут выглядеть так",
                          reply_markup=InlineKeyboardMarkup(row_width=1)
@@ -109,4 +133,5 @@ async def finish(message: types.Message, state: FSMContext):
 
 @dispatcher.message_handler(state=UploadStates.rate_photos)
 async def rate_waiting(message: types.Message):
-    await message.answer("...")
+    await message.answer("🤦")
+    await message.answer("Возникли проблемы? Жми на любую из кнопок ОТМЕНА выше, и начни все заново!")
