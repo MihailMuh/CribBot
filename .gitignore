@@ -32,6 +32,8 @@ build/
 .vscode/
 
 docker/
-photo/
-!photo/translate.json
 src/main/resources/application.properties
+
+!photo/
+photo/*
+!photo/translate.json
