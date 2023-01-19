@@ -1,6 +1,5 @@
 package com.mihalis.cribbot.config;
 
-import com.mihalis.cribbot.commands.StartCommand;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.telegram.telegrambots.bots.DefaultBotOptions;
